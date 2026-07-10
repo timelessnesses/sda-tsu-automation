@@ -8,12 +8,10 @@
 	"main": "src/index.ts",
 	"compatibility_date": "2026-07-09",
 	"observability": {
-		"enabled": true
+		"enabled": true,
 	},
 	"upload_source_maps": true,
-	"compatibility_flags": [
-		"nodejs_compat"
-	]
+	"compatibility_flags": ["nodejs_compat"],
 	/**
 	 * Smart Placement
 	 * https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
@@ -42,4 +40,28 @@
 	 * https://developers.cloudflare.com/workers/wrangler/configuration/#service-bindings
 	 */
 	// "services": [  {   "binding": "MY_SERVICE",   "service": "my-service"  } ]
+	"triggers": {
+		"crons": [
+			// apply
+			"0 8 * * *",
+			// scan again every hour
+			"0 * * * *",
+		],
+	},
+	"browser": {
+		"binding": "FUCK",
+	},
+	"vpc_services": [
+		{
+			"binding": "Proxying",
+			"service_id": "019f461a-24b3-7ac0-a92a-079956140ee7",
+			"remote": true,
+		},
+	],
+	"kv_namespaces": [
+		{
+			"binding": "FUCK_YOU_SDA_KV",
+			"id": "6a1f1b3b02974b75962c2a7d072f4bf8",
+		},
+	],
 }
