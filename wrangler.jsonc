@@ -47,7 +47,7 @@
 			// apply
 			"0 8 * * *",
 			// scan again every hour
-			"0 */1 * * *",
+			"0 * * * *",
 		],
 	},
 	"browser": {
