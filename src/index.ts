@@ -41,7 +41,7 @@ export default {
 			case '0 8 * * *':
 				await applyAllActivities(JSESSION.JSESSIONID, env.Proxying, env.FUCK_YOU_SDA_KV, env.DISCORD_WEBHOOK);
 				break;
-			case '0 * * * *':
+			case '0 */1 * * *':
 				await scan(JSESSION.JSESSIONID, env.Proxying, env.FUCK_YOU_SDA_KV, env.DISCORD_WEBHOOK);
 				break;
 		}
