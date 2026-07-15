@@ -37,6 +37,7 @@ export default {
 			JSESSION = await loginFetch(env.SDA_USERNAME, env.SDA_PASSWORD, env.Proxying);
 			await env.FUCK_YOU_SDA_KV.put('JSESSIONID', JSESSION.JSESSIONID);
 		}
+  console.log(event.cron);
 		switch (event.cron) {
 			case '0 8 * * *':
 				await applyAllActivities(JSESSION.JSESSIONID, env.Proxying, env.FUCK_YOU_SDA_KV, env.DISCORD_WEBHOOK);
