@@ -5,14 +5,23 @@ const limit = pLimit(3);
 
 export default {
 	async fetch(request, env, ctx): Promise<Response> {
+   console.time("req")
+    console.time("cache-session")
 		let JSESSION = {
 			JSESSIONID: (await env.FUCK_YOU_SDA_KV.get('JSESSIONID')) as string,
 		};
+    console.timeEnd("cache-session")
+    console.time("verify-token")
 		if (!(await verifyJsession(JSESSION.JSESSIONID, env.Proxying))) {
+    console.timeEnd("verify-token")
+    console.time("fetch-login")
 			JSESSION = await loginFetch(env.SDA_USERNAME, env.SDA_PASSWORD, env.Proxying);
+    console.timeEnd("fetch-login")
 			await env.FUCK_YOU_SDA_KV.put('JSESSIONID', JSESSION.JSESSIONID);
 		}
+   console.time("scan")
 		await scan(JSESSION.JSESSIONID, env.Proxying, env.FUCK_YOU_SDA_KV, env.DISCORD_WEBHOOK);
+   console.timeEnd("scan")
 
 		// const activities = await getActivityList(JSESSION.JSESSIONID, env.Proxying);
 		// const mapped = activities.flat();
@@ -24,8 +33,10 @@ export default {
 		// 	{} as Record<number, Activity>,
 		// );
 		// await deleteActivities(JSESSION.JSESSIONID, mapped, env.Proxying);
-
+   console.time("apply")
 		await applyAllActivities(JSESSION.JSESSIONID, env.Proxying, env.FUCK_YOU_SDA_KV, env.DISCORD_WEBHOOK);
+   console.timeEnd("apply")
+console.timeEnd("req")
 		return new Response('Hello world');
 	},
 
