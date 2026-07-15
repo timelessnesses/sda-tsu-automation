@@ -164,7 +164,7 @@ async function applyAllActivities(JSESSIONID: string, proxy: Fetcher, kv: KVName
 				content: "Successfully applied to " + (activityIds.length - failed) + " activities, failed to apply to " + failed + " activities, " + full + " activities are full.",
 			})
 		});
-    if (!res.is_ok()) throw new Error(res)
+    if (!res.ok) throw new Error(res)
 	}
 
 	console.log(
@@ -291,7 +291,7 @@ async function sendScanDiscordWebhook(discordWebhook: string, newActivities: Act
 				embeds: chunk,
 			})
 		});
-   if (!res.is_ok()) throw new Error(res);
+   if (!res.ok) throw new Error(res);
 	}
 
 }
