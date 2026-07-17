@@ -5,23 +5,23 @@ const limit = pLimit(3);
 
 export default {
 	async fetch(request, env, ctx): Promise<Response> {
-   console.time("req")
-    console.time("cache-session")
+		console.time('req');
+		console.time('cache-session');
 		let JSESSION = {
 			JSESSIONID: (await env.FUCK_YOU_SDA_KV.get('JSESSIONID')) as string,
 		};
-    console.timeEnd("cache-session")
-    console.time("verify-token")
+		console.timeEnd('cache-session');
+		console.time('verify-token');
 		if (!(await verifyJsession(JSESSION.JSESSIONID, env.Proxying))) {
-    console.timeEnd("verify-token")
-    console.time("fetch-login")
+			console.timeEnd('verify-token');
+			console.time('fetch-login');
 			JSESSION = await loginFetch(env.SDA_USERNAME, env.SDA_PASSWORD, env.Proxying);
-    console.timeEnd("fetch-login")
+			console.timeEnd('fetch-login');
 			await env.FUCK_YOU_SDA_KV.put('JSESSIONID', JSESSION.JSESSIONID);
 		}
-   console.time("scan")
+		console.time('scan');
 		await scan(JSESSION.JSESSIONID, env.Proxying, env.FUCK_YOU_SDA_KV, env.DISCORD_WEBHOOK);
-   console.timeEnd("scan")
+		console.timeEnd('scan');
 
 		// const activities = await getActivityList(JSESSION.JSESSIONID, env.Proxying);
 		// const mapped = activities.flat();
@@ -33,10 +33,10 @@ export default {
 		// 	{} as Record<number, Activity>,
 		// );
 		// await deleteActivities(JSESSION.JSESSIONID, mapped, env.Proxying);
-   console.time("apply")
+		console.time('apply');
 		await applyAllActivities(JSESSION.JSESSIONID, env.Proxying, env.FUCK_YOU_SDA_KV, env.DISCORD_WEBHOOK);
-   console.timeEnd("apply")
-console.timeEnd("req")
+		console.timeEnd('apply');
+		console.timeEnd('req');
 		return new Response('Hello world');
 	},
 
@@ -48,10 +48,9 @@ console.timeEnd("req")
 			JSESSION = await loginFetch(env.SDA_USERNAME, env.SDA_PASSWORD, env.Proxying);
 			await env.FUCK_YOU_SDA_KV.put('JSESSIONID', JSESSION.JSESSIONID);
 		}
-  console.log(event.cron);
+		console.log(event.cron);
 		await scan(JSESSION.JSESSIONID, env.Proxying, env.FUCK_YOU_SDA_KV, env.DISCORD_WEBHOOK);
-   await applyAllActivities(JSESSION.JSESSIONID, env.Proxying, env.FUCK_YOU_SDA_KV, env.DISCORD_WEBHOOK);
-   
+		await applyAllActivities(JSESSION.JSESSIONID, env.Proxying, env.FUCK_YOU_SDA_KV, env.DISCORD_WEBHOOK);
 	},
 } satisfies ExportedHandler<Env>;
 
@@ -80,7 +79,7 @@ async function verifyJsession(JSESSION: string, proxy: Fetcher) {
 	});
 	// console.log(await response.text());
 	// console.log('Verify JSESSION response status:', response.status, response.headers.get("location"));
-	return response.status === 302 && response.headers.get("location") === REDIRECTED_TO_HOME_PAGE;
+	return response.status === 302 && response.headers.get('location') === REDIRECTED_TO_HOME_PAGE;
 }
 
 const FORM_ACTION = 'เข้าสู่ระบบ';
@@ -101,7 +100,6 @@ async function loginFetch(
 ): Promise<{
 	JSESSIONID: string;
 }> {
-
 	const getResponse = await proxy.fetch(LOGIN_PAGE);
 	const initialJSESSIONID = parseSetCookie(getResponse.headers.get('set-cookie') as string, { map: true }).JSESSIONID.value;
 	const form = buildLoginForm(studentId, password);
@@ -111,8 +109,8 @@ async function loginFetch(
 		body: form,
 		headers: {
 			// 'Content-Type': 'application/x-www-form-urlencoded',
-			'Cookie': `JSESSIONID=${initialJSESSIONID}`,
-		}
+			Cookie: `JSESSIONID=${initialJSESSIONID}`,
+		},
 	});
 	// console.log('Login response status:', response.status);
 	// console.log('Login response location:', response.headers.get("location"));
@@ -130,9 +128,9 @@ const ACTIVITY_DETAIL = 'https://sda.tsu.ac.th/student/services/activity.jsp';
 
 async function applyAllActivities(JSESSIONID: string, proxy: Fetcher, kv: KVNamespace, discordWebhook: string) {
 	let activities = JSON.parse((await kv.get('unappliedActivities')) as string) as ActivityKV['unappliedActivities'];
-	console.log(activities)
+	console.log(activities);
 	const successfulActivities = JSON.parse((await kv.get('appliedActivities')) ?? '{}') as ActivityKV['appliedActivities'];
-	console.log(successfulActivities)
+	console.log(successfulActivities);
 	activities = Object.fromEntries(Object.entries(activities).filter(([id]) => !successfulActivities[id]));
 	// console.log('Activities', activities);
 	const activityIds = Object.keys(activities);
@@ -140,9 +138,9 @@ async function applyAllActivities(JSESSIONID: string, proxy: Fetcher, kv: KVName
 	const embeds = [];
 	let failed = 0;
 	let full = 0;
-	console.log(responses)
+	console.log(responses);
 	for (const response of responses) {
-		if (response.result !== "false") {
+		if (response.result !== 'false') {
 			await kv.put('appliedActivities', JSON.stringify({ ...activities, [response.id]: response.result_text }));
 			embeds.push(sendSuccessfulApplyDiscordWebhook(discordWebhook, activities[response.id]));
 		} else {
@@ -159,7 +157,7 @@ async function applyAllActivities(JSESSIONID: string, proxy: Fetcher, kv: KVName
 		}
 	}
 	for (const chunk of chunks(embeds, 5)) {
-   console.log(chunk);
+		console.log(chunk);
 		const res = await fetch(discordWebhook, {
 			method: 'POST',
 			headers: {
@@ -168,31 +166,43 @@ async function applyAllActivities(JSESSIONID: string, proxy: Fetcher, kv: KVName
 			body: JSON.stringify({
 				...annouceNewApplyEmbedBody,
 				embeds: chunk,
-				content: "Successfully applied to " + (activityIds.length - failed) + " activities, failed to apply to " + failed + " activities, " + full + " activities are full.",
-			})
+				content:
+					'Successfully applied to ' +
+					(activityIds.length - failed) +
+					' activities, failed to apply to ' +
+					failed +
+					' activities, ' +
+					full +
+					' activities are full.',
+			}),
 		});
-    if (!res.ok) throw new Error(res)
+		if (!res.ok) throw new Error(await res.text());
 	}
 
-	console.log(
-		{
-			...annouceNewApplyEmbedBody,
-			embeds: embeds,
-			content: "Successfully applied to " + (activityIds.length - failed) + " activities, failed to apply to " + failed + " activities, " + full + " activities are full.",
-		}
-	)
+	console.log({
+		...annouceNewApplyEmbedBody,
+		embeds: embeds,
+		content:
+			'Successfully applied to ' +
+			(activityIds.length - failed) +
+			' activities, failed to apply to ' +
+			failed +
+			' activities, ' +
+			full +
+			' activities are full.',
+	});
 }
 
 function sendSuccessfulApplyDiscordWebhook(discordWebhook: string, activity: Activity) {
-	return customContentActivityEmbed('✅ Successfully applied to activity!', activity)
+	return customContentActivityEmbed('✅ Successfully applied to activity!', activity);
 }
 
 function sendUnableToApplyDiscordWebhook(discordWebhook: string, activity: Activity, response_text: string) {
-	return customContentActivityEmbed('❌ Unable to apply to activity!\n' + response_text, activity)
+	return customContentActivityEmbed('❌ Unable to apply to activity!\n' + response_text, activity);
 }
 
 function sendFailedApplyDiscordWebhook(discordWebhook: string, activity: Activity, response_text: string) {
-	return customContentActivityEmbed('❌ Failed to apply to activity!\n' + response_text, activity)
+	return customContentActivityEmbed('❌ Failed to apply to activity!\n' + response_text, activity);
 }
 
 async function getActivityList(JSESSIONID: string, proxy: Fetcher) {
@@ -274,20 +284,18 @@ async function scan(JSESSIONID: string, proxy: Fetcher, kv: KVNamespace, discord
 		{} as Record<number, Activity>,
 	);
 	await kv.put('unappliedActivities', JSON.stringify(newActivitiesKV));
-	await sendScanDiscordWebhook(discordWebhook, mapped)
+	await sendScanDiscordWebhook(discordWebhook, mapped);
 }
 
 async function sendScanDiscordWebhook(discordWebhook: string, newActivities: ActivitiesResponse) {
 	const embeds = newActivities.map(buildActivityEmbed);
 
-	console.log(
-		{
-			...annouceNewApplyEmbedBody,
-			embeds: embeds,
-		}
-	)
+	console.log({
+		...annouceNewApplyEmbedBody,
+		embeds: embeds,
+	});
 	for (const chunk of chunks(embeds, 5)) {
-   console.log(chunk)
+		console.log(chunk);
 		const res = await fetch(discordWebhook, {
 			method: 'POST',
 			headers: {
@@ -296,18 +304,17 @@ async function sendScanDiscordWebhook(discordWebhook: string, newActivities: Act
 			body: JSON.stringify({
 				...annouceNewApplyEmbedBody,
 				embeds: chunk,
-			})
+			}),
 		});
-   if (!res.ok) throw new Error(res);
+		if (!res.ok) throw new Error(await res.text());
 	}
-
 }
 
 function customContentActivityEmbed(content: string, activity: Activity) {
 	return {
 		...buildActivityEmbed(activity),
 		title: content + activity.activity,
-	}
+	};
 }
 
 function chunks<T>(array: T[], size: number): T[][] {
