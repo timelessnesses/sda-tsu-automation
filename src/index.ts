@@ -157,7 +157,7 @@ async function applyAllActivities(JSESSIONID: string, proxy: Fetcher, kv: KVName
 		}
 	}
 	for (const chunk of chunks(embeds, 5)) {
-		console.log(chunk);
+		console.log(JSON.stringify(chunk, null, 2));
 		const res = await fetch(discordWebhook, {
 			method: 'POST',
 			headers: {
@@ -314,7 +314,9 @@ async function sendScanDiscordWebhook(discordWebhook: string, newActivities: Act
 		embeds: embeds,
 	});
 	for (const chunk of chunks(embeds, 5)) {
-		console.log(chunk);
+		// console.dir(chunk, { depth: 99999 });
+		console.log(JSON.stringify(chunk, null, 2));
+
 		const res = await fetch(discordWebhook, {
 			method: 'POST',
 			headers: {
@@ -392,7 +394,7 @@ function buildActivityEmbed(activity: Activity) {
 		],
 		url: MAIN_HOST,
 		image: {
-			url: 'https://sda.tsu.ac.th/' + activity.banner_path,
+			url: encodeURI('https://sda.tsu.ac.th/' + activity.banner_path),
 		},
 		timestamp: new Date().toISOString(),
 	};
