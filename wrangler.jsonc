@@ -42,10 +42,8 @@
 	// "services": [  {   "binding": "MY_SERVICE",   "service": "my-service"  } ]
 	"triggers": {
 		"crons": [
-			// apply
-			"0 8 * * *",
-			// scan again every hour
-			"0 * * * *",
+			// Every 5 minutes; the run at the top of the hour also performs the hourly activity scan.
+			"*/5 * * * *",
 		],
 	},
 	"browser": {
